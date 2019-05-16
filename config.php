@@ -1,6 +1,6 @@
 <?php
 
 $modules = [
-    'ipl'         => 'v0.2.1',
-    'reactbundle' => 'v0.5.1',
+    'ipl'         => 'v0.3.0',
+    'reactbundle' => 'v0.6.0',
 ];
