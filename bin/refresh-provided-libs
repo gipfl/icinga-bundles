@@ -1,0 +1,79 @@
+#!/usr/bin/env php
+<?php
+
+error_reporting(E_ALL|E_STRICT);
+$baseDir = dirname(__DIR__);
+require_once "$baseDir/config.php";
+
+$composerFile = "$baseDir/composer.json";
+$composer = json_decode(file_get_contents($composerFile));
+if (! $composer) {
+    $error = json_last_error_msg();
+    die("Failed to parse '$composerFile': $error\n");
+}
+
+$tmpDir = "$baseDir/tmp";
+$baseUrl = 'https://github.com/Icinga/icingaweb2-module-{MODULE_NAME}/archive/{VERSION}.tar.gz';
+$provided = [];
+
+function run($cmd)
+{
+    // echo "RUNNING: $cmd\n";
+    $output = null;
+    $retCode = null;
+    exec($cmd, $output, $retCode);
+    if ($retCode !== 0) {
+        die("$cmd failed with exit code $retCode: $output\n");
+    }
+
+    $result = implode("\n", $output);
+
+    return $result;
+}
+
+foreach ($modules as $module => $version) {
+    $url = str_replace(
+        '{MODULE_NAME}',
+        $module,
+        str_replace('{VERSION}', $version, $baseUrl)
+    );
+
+    $targetDir = "$tmpDir/$module";
+    $tarFile = "$tmpDir/${module}.tar.gz";
+    if (is_dir($targetDir)) {
+        echo "Using existing '$module' in '$targetDir'\n";
+    } else {
+        if (file_exists($targetDir)) {
+            die("$targetDir already exists, stopping\n");
+        }
+
+        $content = file_get_contents($url);
+        if (strlen($content) < 32000) {
+            die("File fetched from $url seems to be too small\n");
+        }
+        file_put_contents($tarFile, $content);
+        mkdir($targetDir);
+        run("tar xfz '${tmpDir}/${module}.tar.gz' --strip-components=1 -C '${tmpDir}/${module}'");
+        unlink($tarFile);
+    }
+    if (! is_file("$targetDir/composer.json")) {
+        die("There is no '$targetDir/composer.json'\n");
+    }
+    if (! is_file("$targetDir/composer.lock")) {
+        die("There is no '$targetDir/composer.lock'\n");
+    }
+    $json = run("composer info --format json --working-dir=$targetDir");
+    $info = json_decode($json);
+    if (! is_object($info) || ! isset($info->installed)) {
+        die("Failed to check installed dependencies for '$module' in '$targetDir'\n");
+    }
+    foreach ($info->installed as $pkg) {
+        // replace: dev-master a620bcf
+        $provided[$pkg->name] = preg_replace('/\s.+/', '', $pkg->version);
+    }
+    // run("rm -rf $targetDir");
+}
+
+ksort($provided);
+$composer->provide = $provided;
+file_put_contents($composerFile, json_encode($composer, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));

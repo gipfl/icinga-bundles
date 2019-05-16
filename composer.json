@@ -1,0 +1,54 @@
+{
+    "name": "gipfl/icinga-bundles",
+    "description": "Provides (replaces) all packages provided by ipl and reactbundle",
+    "type": "metapackage",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Thomas Gelf",
+            "email": "thomas@gelf.net"
+        }
+    ],
+    "provide": {
+        "clue/block-react": "v1.3.1",
+        "clue/buzz-react": "v2.6.0",
+        "clue/connection-manager-extra": "v1.1.0",
+        "clue/http-proxy-react": "v1.4.0",
+        "clue/mq-react": "v1.1.0",
+        "clue/redis-protocol": "v0.3.1",
+        "clue/redis-react": "v2.3.0",
+        "clue/soap-react": "v1.0.0",
+        "clue/socket-raw": "v1.4.0",
+        "clue/socks-react": "v1.0.0",
+        "evenement/evenement": "v2.1.0",
+        "guzzlehttp/psr7": "1.5.2",
+        "ipl/html": "v0.1.1",
+        "ipl/sql": "dev-master",
+        "ipl/stdlib": "v0.1.0",
+        "paragonie/random_compat": "v2.0.18",
+        "predis/predis": "v1.1.1",
+        "psr/http-message": "1.0.1",
+        "ralouphie/getallheaders": "2.0.5",
+        "ramsey/uuid": "3.8.0",
+        "react/cache": "v0.5.0",
+        "react/child-process": "v0.6.1",
+        "react/datagram": "v1.4.0",
+        "react/dns": "v0.4.17",
+        "react/event-loop": "v1.1.0",
+        "react/http": "v0.8.4",
+        "react/http-client": "v0.5.9",
+        "react/promise": "v2.7.1",
+        "react/promise-stream": "v1.1.1",
+        "react/promise-timer": "v1.5.1",
+        "react/socket": "v1.2.0",
+        "react/stream": "v1.1.0",
+        "ringcentral/psr7": "1.2.2",
+        "symfony/polyfill-ctype": "v1.11.0"
+    },
+    "require": {
+        "ext-json": "*"
+    },
+    "scripts": {
+        "refresh-provided-libs": "bin/refresh-provided-libs"
+    }
+}
