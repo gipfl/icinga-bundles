@@ -75,5 +75,5 @@ foreach ($modules as $module => $version) {
 }
 
 ksort($provided);
-$composer->provide = $provided;
-file_put_contents($composerFile, json_encode($composer, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));
+$composer->replace = $provided;
+file_put_contents($composerFile, json_encode($composer, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)) . "\n";

@@ -9,7 +9,7 @@
             "email": "thomas@gelf.net"
         }
     ],
-    "provide": {
+    "replace": {
         "clue/block-react": "v1.3.1",
         "clue/buzz-react": "v2.6.0",
         "clue/connection-manager-extra": "v1.1.0",
