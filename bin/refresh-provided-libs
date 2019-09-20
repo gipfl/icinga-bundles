@@ -18,7 +18,6 @@ $provided = [];
 
 function run($cmd)
 {
-    // echo "RUNNING: $cmd\n";
     $output = null;
     $retCode = null;
     exec($cmd, $output, $retCode);
@@ -76,4 +75,5 @@ foreach ($modules as $module => $version) {
 
 ksort($provided);
 $composer->replace = $provided;
-file_put_contents($composerFile, json_encode($composer, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)) . "\n";
+$flags = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE;
+file_put_contents($composerFile, json_encode($composer, $flags) . "\n");
