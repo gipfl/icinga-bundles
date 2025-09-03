@@ -13,7 +13,6 @@ if (! $composer) {
 }
 
 $tmpDir = "$baseDir/tmp";
-$baseUrl = 'https://github.com/Icinga/icingaweb2-module-{MODULE_NAME}/archive/{VERSION}.tar.gz';
 $provided = [];
 
 function run($cmd)
@@ -30,45 +29,72 @@ function run($cmd)
     return $result;
 }
 
-foreach ($modules as $module => $version) {
-    $url = str_replace(
+function moduleUrl($module, $version)
+{
+    $baseUrl = 'https://github.com/Icinga/icingaweb2-module-{MODULE_NAME}/archive/{VERSION}.tar.gz';
+    return str_replace(
         '{MODULE_NAME}',
         $module,
         str_replace('{VERSION}', $version, $baseUrl)
     );
 
-    $targetDir = "$tmpDir/$module";
-    $tarFile = "$tmpDir/${module}.tar.gz";
-    if (is_dir($targetDir)) {
-        echo "Using existing '$module' in '$targetDir'\n";
-    } else {
-        if (file_exists($targetDir)) {
-            die("$targetDir already exists, stopping\n");
-        }
+}
 
-        $content = file_get_contents($url);
-        if (strlen($content) < 32000) {
-            die("File fetched from $url seems to be too small\n");
+function wantDir($dir, $name)
+{
+    if (is_dir($dir)) {
+        echo "Using existing '$name' in '$dir'\n";
+    } else {
+        if (file_exists($dir)) {
+            die("$dir already exists, stopping\n");
         }
-        file_put_contents($tarFile, $content);
-        mkdir($targetDir);
-        run("tar xfz '${tmpDir}/${module}.tar.gz' --strip-components=1 -C '${tmpDir}/${module}'");
-        unlink($tarFile);
+        mkdir($dir);
     }
-    if (! is_file("$targetDir/composer.json")) {
-        die("There is no '$targetDir/composer.json'\n");
+}
+
+function download($url, $targetFile)
+{
+    $content = file_get_contents($url);
+    if (strlen($content) < 32000) {
+        die("File fetched from $url seems to be too small\n");
     }
-    if (! is_file("$targetDir/composer.lock")) {
-        die("There is no '$targetDir/composer.lock'\n");
+    file_put_contents($targetFile, $content);
+}
+
+function collectDependencies($dir, $name)
+{
+    $provided = [];
+    if (! is_file("$dir/composer.json")) {
+        die("There is no '$dir/composer.json'\n");
     }
-    $json = run("composer info --format json --working-dir=$targetDir");
+    if (! is_file("$dir/composer.lock")) {
+        die("There is no '$dir/composer.lock'\n");
+    }
+    $json = run("composer info --format json --working-dir=$dir");
     $info = json_decode($json);
     if (! is_object($info) || ! isset($info->installed)) {
-        die("Failed to check installed dependencies for '$module' in '$targetDir'\n");
+        die("Failed to check installed dependencies for '$name' in '$dir'\n");
     }
     foreach ($info->installed as $pkg) {
         // replace: dev-master a620bcf
         $provided[$pkg->name] = preg_replace('/\s.+/', '', $pkg->version);
+    }
+
+    return $provided;
+}
+
+foreach ($repos as $name => $url) {
+    $targetDir = "$tmpDir/$name";
+    $tarFile = "$tmpDir/${name}.tar.gz";
+    wantDir($targetDir, $name);
+    download($url, $tarFile);
+    run("tar xfz '${tmpDir}/${name}.tar.gz' --strip-components=1 -C '${tmpDir}/${name}'");
+    unlink($tarFile);
+    foreach (collectDependencies($targetDir, $name) as $pkg => $version) {
+        if (isset($provided[$pkg]) && $version !== $provided[$pkg]) {
+            printf("Replacing '%s' %s with %s\n", $pkg, $provided[$pkg], $version);
+        }
+        $provided[$pkg] = $version;
     }
     // run("rm -rf $targetDir");
 }
